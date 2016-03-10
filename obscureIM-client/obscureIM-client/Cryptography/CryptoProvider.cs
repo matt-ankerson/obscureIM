@@ -41,6 +41,36 @@ namespace obscureIM_client.Cryptography
         /// <returns>Encrypted Message</returns>
         public static Message Encrypt(string publicKeyString, Message message)
         {
+            return new Message()
+            {
+                Sender = EncryptString(publicKeyString, message.Sender),
+                MessageContent = EncryptString(publicKeyString, message.MessageContent)
+            };
+        }
+
+        /// <summary>
+        /// Decrypt a given Message
+        /// </summary>
+        /// <param name="cypherMessage">Message object to decrypt</param>
+        /// <param name="privateKeyString">Private key to use for decryption, in string format</param>
+        /// <returns>Decrypted Message</returns>
+        public static Message Decrypt(Message cypherMessage, string privateKeyString)
+        {
+            return new Message()
+            {
+                Sender = DecryptString(privateKeyString, cypherMessage.Sender),
+                MessageContent = DecryptString(privateKeyString, cypherMessage.MessageContent)
+            };
+        }
+
+        /// <summary>
+        /// Encrypt a given string using a given public key.
+        /// </summary>
+        /// <param name="publicKeyString">Public key to use in string format.</param>
+        /// <param name="plainText">Text to encrypt</param>
+        /// <returns>The cyphertext</returns>
+        public static string EncryptString(string publicKeyString, string plainText)
+        {
             // Convert the string representation into an RSA param.
             var publicKey = convertStringToKey(publicKeyString);
 
@@ -48,34 +78,29 @@ namespace obscureIM_client.Cryptography
             var csp = new RSACryptoServiceProvider();
             csp.ImportParameters(publicKey);
 
-            // Encrypt both the sender and messageContent fields in the message object.
-            var plainTextSender = message.Sender;
-            var plainTextMessageContent = message.MessageContent;
-
+            // Encrypt the plaintext.
             // For encryption, use bytes.
-            var bytesPlainTextSender = Encoding.Unicode.GetBytes(plainTextSender);
-            var bytesPlainTextMessageContent = Encoding.Unicode.GetBytes(plainTextMessageContent);
+            var bytesPlainText = Encoding.Unicode.GetBytes(plainText);
 
             // Apply pkcs#1.5 padding and encrypt the data
-            var bytesCypherTextSender = csp.Encrypt(bytesPlainTextSender, false);
-            var bytesCypherTextMessageContent = csp.Encrypt(bytesPlainTextMessageContent, false);
+            var bytesCypherText = csp.Encrypt(bytesPlainText, false);
 
-            // Get string representations of our cypher text.
-            var cypherTextSender = Convert.ToBase64String(bytesCypherTextSender);
-            var cypherTextMessageContent = Convert.ToBase64String(bytesCypherTextMessageContent);
+            // Get a string representation of our cypher text.
+            var cypherText = Convert.ToBase64String(bytesCypherText);
 
-            // Return a new message with the fields encrypted.
-            return new Message() { Sender = cypherTextSender, MessageContent = cypherTextMessageContent };
+            return cypherText;
         }
 
-        public static Message Decrypt(Message cypherMessage, string privateKeyString)
+        /// <summary>
+        /// Decrypt a given cyphered message using a given private key.
+        /// </summary>
+        /// <param name="privateKeyString">The private key to use in string format.</param>
+        /// <param name="cypherText">The text to decrypt</param>
+        /// <returns>Decrypted string</returns>
+        public static string DecryptString(string privateKeyString, string cypherText)
         {
-            var cypherTextSender = cypherMessage.Sender;
-            var cypherTextMessageContent = cypherMessage.MessageContent;
-
-            // First, get the bytes back from the base64 strings.
-            var bytesCypherTextSender = Convert.FromBase64String(cypherTextSender);
-            var bytesCypherTextMessageContent = Convert.FromBase64String(cypherTextMessageContent);
+            // First, get the bytes back from the base64 string.
+            var bytesCypherText = Convert.FromBase64String(cypherText);
 
             // We want to decrypt, therefore we need a csp and our private key.
             var privateKey = convertStringToKey(privateKeyString);
@@ -84,15 +109,12 @@ namespace obscureIM_client.Cryptography
             csp.ImportParameters(privateKey);
 
             // Decrypt and strip pkcs#1.5 padding.
-            var bytesPlainTextSender = csp.Decrypt(bytesCypherTextSender, false);
-            var bytesPlainTextMessageContent = csp.Decrypt(bytesCypherTextMessageContent, false);
+            var bytesPlainText = csp.Decrypt(bytesCypherText, false);
 
             // Get the original plaintext
-            var plainTextSender = System.Text.Encoding.Unicode.GetString(bytesPlainTextSender);
-            var plainTextMessageContent = System.Text.Encoding.Unicode.GetString(bytesPlainTextMessageContent);
+            var plainText = Encoding.Unicode.GetString(bytesPlainText);
 
-            // Return a decrypted message
-            return new Message() { Sender = plainTextSender, MessageContent = plainTextMessageContent };
+            return plainText;
         }
 
         private static string convertKeyToString(RSAParameters key)

@@ -97,5 +97,6 @@ namespace obscureIM_client
             // Remove the session from the session store
             SessionManager.Instance.sessions.Remove(cryptoKeyPair.Key);
         }
+
     }
 }

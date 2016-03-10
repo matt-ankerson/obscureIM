@@ -12,6 +12,7 @@ namespace obscureIM_client
 
         public static void Main(string[] args)
         {
+            Console.Title = "obscureIM";
             JoinChat();
         }
 
@@ -22,8 +23,8 @@ namespace obscureIM_client
 
             if (serverUrl == "")
             {
-                //serverUrl = "http://ankerson.nz/signalr";
-                serverUrl = "http://localhost:52435/signalr";
+                serverUrl = "http://ankerson.nz/signalr";
+                //serverUrl = "http://localhost:52435/signalr";
             }
 
             Console.Write("Nickname: ");
@@ -38,7 +39,7 @@ namespace obscureIM_client
 
             try
             {
-                connectionManager.EstablishConnection(serverUrl);
+                connectionManager.EstablishConnection(serverUrl, nick);
                 Console.WriteLine("Connected.");
                 Thread.Sleep(500);
                 Console.Clear();
@@ -55,18 +56,24 @@ namespace obscureIM_client
             {
                 var message = Console.ReadLine();
 
+                // Clear the typed message.
+                Console.SetCursorPosition(0, Console.CursorTop - 1);
+                clearCurrentConsoleLine();
+
                 if (message == "/quit")
                 {
                     break;
                 }
 
-                // Clear the typed message.
-                Console.SetCursorPosition(0, Console.CursorTop - 1);
-                clearCurrentConsoleLine();
-
-                // Don't await this call, fire the message off and continue.
-                connectionManager.SendMessage(nick, message);
-
+                if (message == "/names")
+                {
+                    connectionManager.RequestNicks();
+                }
+                else
+                {
+                    // Don't await this call, fire the message off and continue.
+                    connectionManager.SendMessage(message);
+                }
             }
         }
 

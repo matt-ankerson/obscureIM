@@ -16,14 +16,17 @@ namespace obscureIM_client
 
         private HubConnection _hubConnection;
         private IHubProxy _chatHubProxy;
+        private string _nick;
 
         public ConnectionManager()
         {
             log.Info("Creating Connection Manager");
+            _nick = "";
         }
 
-        public async void EstablishConnection(string serverUrl)
+        public async void EstablishConnection(string serverUrl, string nick)
         {
+            this._nick = nick;
             // Can specify parameters to send to the server via a dictionary, ie. channel to join etc.
             _hubConnection = new HubConnection(serverUrl);
 
@@ -42,29 +45,22 @@ namespace obscureIM_client
             // Recieving a command to initiate a downward secure message.
             _chatHubProxy.On<string>("GetPublicKey", sessionId => SendPublicKeyForSecureTransfer(sessionId));
 
+            // Recieving a command to send up the nickname
+            _chatHubProxy.On("GetNick", SendNick);
 
             // Recieving a message.
             _chatHubProxy.On<Message>("AddNewMessage", message => Console.WriteLine("{0} {1}: {2}", DateTime.Now.ToShortTimeString(), message.Sender, message.MessageContent));
         }
 
 
-        public async Task SendMessage(string nick, string message)
+        public async Task SendMessage(string message)
         {
             log.Info("Getting public key for transfer");
             // Get a public key from the server.
-            string publicKey = "";
-            try
-            {
-                publicKey = await _chatHubProxy.Invoke<string>("GetPublicKeyForSecureTransfer");
-            }
-            catch (Exception ex)
-            {
-                var exc = ex;
-            }
-            
+            var publicKey = await _chatHubProxy.Invoke<string>("GetPublicKeyForSecureTransfer");
             log.Info("Encrypting message");
             // Encrypt the message data
-            var cypherMessage = CryptoProvider.Encrypt(publicKey, new Message() { Sender = nick, MessageContent = message });
+            var cypherMessage = CryptoProvider.Encrypt(publicKey, new Message() { Sender = _nick, MessageContent = message });
 
             // Send the encrypted message, include the public key so the server can identify the session.
             cypherMessage.PublicKey = publicKey;
@@ -72,6 +68,13 @@ namespace obscureIM_client
             log.Info("Attempting to send message");
             await _chatHubProxy.Invoke<Message>("SendMessage", cypherMessage);
             log.Info("Sent");
+        }
+
+        public async Task RequestNicks()
+        {
+            log.Info("Requesting nicks");
+            await _chatHubProxy.Invoke("RequestNicks");
+            log.Info("Nicks requested");
         }
 
         private async void SendPublicKeyForSecureTransfer(string sessionId)
@@ -96,6 +99,14 @@ namespace obscureIM_client
 
             // Remove the session from the session store
             SessionManager.Instance.sessions.Remove(cryptoKeyPair.Key);
+        }
+
+        private async void SendNick()
+        {
+            // Push the nick up to the server, 
+            // which will return it to the user who issued the request.
+            log.Info("Sending nick");
+            await _chatHubProxy.Invoke("ReleaseNick", _nick);
         }
 
     }

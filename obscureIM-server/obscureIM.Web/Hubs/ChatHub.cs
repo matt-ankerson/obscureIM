@@ -63,6 +63,20 @@ namespace obscureIM.Web.Hubs
             return cypherTextMessage;
         }
 
+        /// <summary>
+        /// Ask all connected clients for their nicks
+        /// </summary>
+        public void RequestNicks()
+        {
+            Clients.All.AddNewMessage(new Message() { Sender = "Server", MessageContent = "All nicks requested..." });
+            Clients.All.GetNick();
+        }
+
+        public void ReleaseNick(string nick)
+        {
+            Clients.All.AddNewMessage(new Message() { Sender = "Server", MessageContent = nick });
+        }
+
         private void RemoveExpiredMessages()
         {
             var messageDict = SessionManager.Instance.WaitingMessages;

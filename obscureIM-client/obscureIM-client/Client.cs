@@ -30,19 +30,12 @@ namespace obscureIM_client
             Console.Write("Nickname: ");
             var nick = Console.ReadLine();
 
-            messageLoop(serverUrl, nick);
-        }
-
-        private static void messageLoop(string serverUrl, string nick)
-        {
+            // Create connection manager
             var connectionManager = new ConnectionManager();
 
             try
             {
                 connectionManager.EstablishConnection(serverUrl, nick);
-                Console.WriteLine("Connected.");
-                Thread.Sleep(500);
-                Console.Clear();
             }
             catch (Exception)
             {
@@ -50,8 +43,13 @@ namespace obscureIM_client
                 Console.ReadLine();
                 return;
             }
-            
 
+            // Begin sending/accepting messages
+            messageLoop(connectionManager);
+        }
+
+        private static void messageLoop(ConnectionManager connectionManager)
+        {
             while (true)
             {
                 var message = Console.ReadLine();

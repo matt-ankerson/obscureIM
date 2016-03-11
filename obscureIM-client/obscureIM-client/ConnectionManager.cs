@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using obscureIM_client.Models;
 using obscureIM_client.Cryptography;
+using System.Threading;
+using System.Drawing;
 
 namespace obscureIM_client
 {
@@ -24,7 +26,7 @@ namespace obscureIM_client
             _nick = "";
         }
 
-        public async void EstablishConnection(string serverUrl, string nick)
+        public void EstablishConnection(string serverUrl, string nick)
         {
             this._nick = nick;
             // Can specify parameters to send to the server via a dictionary, ie. channel to join etc.
@@ -36,8 +38,11 @@ namespace obscureIM_client
 
             // Wait for the connection to open before proceding.
             log.Info("Starting Connection");
-            await _hubConnection.Start();
+            _hubConnection.Start();
             log.Info("Started");
+            Console.WriteLine("Connected.");
+            Thread.Sleep(500);
+            Console.Clear();
         }
 
         private void registerEventHandlers()
@@ -49,7 +54,7 @@ namespace obscureIM_client
             _chatHubProxy.On("GetNick", SendNick);
 
             // Recieving a message.
-            _chatHubProxy.On<Message>("AddNewMessage", message => Console.WriteLine("{0} {1}: {2}", DateTime.Now.ToShortTimeString(), message.Sender, message.MessageContent));
+            _chatHubProxy.On<Message>("AddNewMessage", message => printMessageUnobtrusively(message));
         }
 
 
@@ -95,7 +100,8 @@ namespace obscureIM_client
             var message = CryptoProvider.Decrypt(cypherTextMessage, SessionManager.Instance.sessions[cryptoKeyPair.Key]);
             log.Info("Decrypted message");
 
-            Console.WriteLine("{0} {1}: {2}", DateTime.Now.ToShortTimeString(), message.Sender, message.MessageContent);
+            //Console.WriteLine("{0} {1}: {2}", DateTime.Now.ToShortTimeString(), message.Sender, message.MessageContent);
+            printMessageUnobtrusively(message);
 
             // Remove the session from the session store
             SessionManager.Instance.sessions.Remove(cryptoKeyPair.Key);
@@ -107,6 +113,11 @@ namespace obscureIM_client
             // which will return it to the user who issued the request.
             log.Info("Sending nick");
             await _chatHubProxy.Invoke("ReleaseNick", _nick);
+        }
+
+        private void printMessageUnobtrusively(Message message)
+        {
+            Console.WriteLine("{0} {1}: {2}", DateTime.Now.ToShortTimeString(), message.Sender, message.MessageContent);
         }
 
     }

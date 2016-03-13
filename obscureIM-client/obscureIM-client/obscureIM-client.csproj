@@ -59,7 +59,6 @@
     <Compile Include="ConnectionManager.cs" />
     <Compile Include="Cryptography\CryptoProvider.cs" />
     <Compile Include="Cryptography\SessionManager.cs" />
-    <Compile Include="MessageBuffer.cs" />
     <Compile Include="Models\Message.cs" />
     <Compile Include="Client.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -9,14 +9,16 @@ namespace obscureIM_client
 {
     public class Client
     {
+        private static ConsoleHelper _consoleHelper;
 
         public static void Main(string[] args)
         {
+            _consoleHelper = new ConsoleHelper(0, 0, 20);
             Console.Title = "obscureIM";
-            JoinChat();
+            joinChat();
         }
 
-        private static void JoinChat()
+        private static void joinChat()
         {
             Console.Write("Chat Server FQDN / <enter> for default: ");
             var serverUrl = Console.ReadLine();
@@ -31,7 +33,7 @@ namespace obscureIM_client
             var nick = Console.ReadLine();
 
             // Create connection manager
-            var connectionManager = new ConnectionManager();
+            var connectionManager = new ConnectionManager(_consoleHelper);
 
             try
             {
@@ -48,6 +50,10 @@ namespace obscureIM_client
             messageLoop(connectionManager);
         }
 
+        /// <summary>
+        /// Continuously accept messages from the user
+        /// </summary>
+        /// <param name="connectionManager"></param>
         private static void messageLoop(ConnectionManager connectionManager)
         {
             while (true)
@@ -56,7 +62,7 @@ namespace obscureIM_client
 
                 // Clear the typed message.
                 Console.SetCursorPosition(0, Console.CursorTop - 1);
-                clearCurrentConsoleLine();
+                _consoleHelper.ClearCurrentConsoleLine();
 
                 if (message == "/quit")
                 {
@@ -65,6 +71,7 @@ namespace obscureIM_client
 
                 if (message == "/names")
                 {
+                    // Issue a request for all nicknames asynchronously
                     connectionManager.RequestNicks();
                 }
                 else
@@ -73,14 +80,6 @@ namespace obscureIM_client
                     connectionManager.SendMessage(message);
                 }
             }
-        }
-
-        private static void clearCurrentConsoleLine()
-        {
-            int currentLineCursor = Console.CursorTop;
-            Console.SetCursorPosition(0, Console.CursorTop);
-            Console.Write(new string(' ', Console.WindowWidth));
-            Console.SetCursorPosition(0, currentLineCursor);
         }
     }
 }

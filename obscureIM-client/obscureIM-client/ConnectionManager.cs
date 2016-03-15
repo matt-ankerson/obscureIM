@@ -16,12 +16,14 @@ namespace obscureIM_client
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger
             (System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        private ConsoleHelper _consoleHelper;
         private HubConnection _hubConnection;
         private IHubProxy _chatHubProxy;
         private string _nick;
 
-        public ConnectionManager()
+        public ConnectionManager(ConsoleHelper consoleHelper)
         {
+            _consoleHelper = consoleHelper;
             log.Info("Creating Connection Manager");
             _nick = "";
         }
@@ -117,11 +119,13 @@ namespace obscureIM_client
 
         private void printMessageUnobtrusively(Message message)
         {
-            Console.SetCursorPosition(0, Console.CursorTop);
-            Console.WriteLine("");
-            Console.SetCursorPosition(0, Console.CursorTop -1);
-            Console.Write("{0} {1}: {2}", DateTime.Now.ToShortTimeString(), message.Sender, message.MessageContent);
-            Console.SetCursorPosition(0, Console.CursorTop + 1);
+            //Console.SetCursorPosition(0, Console.CursorTop);
+            //Console.WriteLine("");
+            //Console.SetCursorPosition(0, Console.CursorTop -1);
+            //Console.Write("{0} {1}: {2}", DateTime.Now.ToShortTimeString(), message.Sender, message.MessageContent);
+            //Console.SetCursorPosition(0, Console.CursorTop + 1);
+            var messageText = DateTime.Now.ToShortTimeString() + " " + message.Sender + " " + message.MessageContent;
+            _consoleHelper.WriteOut(messageText, true);
         }
 
     }

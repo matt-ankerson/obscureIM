@@ -119,12 +119,7 @@ namespace obscureIM_client
 
         private void printMessageUnobtrusively(Message message)
         {
-            //Console.SetCursorPosition(0, Console.CursorTop);
-            //Console.WriteLine("");
-            //Console.SetCursorPosition(0, Console.CursorTop -1);
-            //Console.Write("{0} {1}: {2}", DateTime.Now.ToShortTimeString(), message.Sender, message.MessageContent);
-            //Console.SetCursorPosition(0, Console.CursorTop + 1);
-            var messageText = DateTime.Now.ToShortTimeString() + " " + message.Sender + " " + message.MessageContent;
+            var messageText = DateTime.Now.ToShortTimeString() + " " + message.Sender + ": " + message.MessageContent;
             _consoleHelper.WriteOut(messageText, true);
         }
 
